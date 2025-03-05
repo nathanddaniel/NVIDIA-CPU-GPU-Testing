@@ -34,7 +34,10 @@ int main() {
         printf("Number of Streaming Multiprocessors is: %d\n", dp.multiProcessorCount);
 
         //printing out the number of cores
-        //should I do CUDA Core per SM count for my GPU model?
+        //formula CUDA cores = (# of SM)*(CUDA core per SM)
+        //for the RTX 3060 Ti theres 128 CUDA cores/SM
+        int numCudaCores = dp.multiProcessorCount * 128; // 128 cores per SM for Ampere
+        printf("Number of CUDA Cores: %d\n", numCudaCores);
 
         //printing the amount of Global Memory
         printf("Amount of Global Memory is: %llu bytes \n", dp.totalGlobalMem);
