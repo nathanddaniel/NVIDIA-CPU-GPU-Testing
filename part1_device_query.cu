@@ -8,7 +8,7 @@ int main() {
     int nd; //number of avialble CUDA GPUs
 
     //the function cudaGetDeviceCount() returns the number of CUDA capable GPUs
-    nd = cudaGetDeviceCount(&nd);
+    cudaGetDeviceCount(&nd);
 
     //printing out the number of CUDA capable GPUs available
     printf("Number of CUDA capable GPUs that are available is: %d\n", nd);
@@ -22,7 +22,7 @@ int main() {
         cudaDeviceProp dp;
 
         //filling in the structure with the properties of the GPU
-        cudaDeviceProperties(&dp, i);
+        cudaGetDeviceProperties(&dp, i);
 
         //printing out the GPU info
         printf("Device %d --> Max Threads per SM: %d, Warp Size: %d\n", i, dp.maxThreadsPerMultiProcessor, dp.warpSize);
@@ -32,12 +32,4 @@ int main() {
     }
 
     return 0;
-}
-
-for (int d = 0; d < nd; d++){
-    cudaDeviceProp dp;
-    cudaGetDeviceProperties(&dp, d);
-    printf("Device %d --> Property 1 is %d, Property 2 is %d\n", d, dp.maxThreadsPerMultiProcessor, dp.warpSize);
-    strcpy(name, dp.name);
-    printf("GPU Name: %s\n", name);
 }
