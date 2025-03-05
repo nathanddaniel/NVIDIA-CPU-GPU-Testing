@@ -27,7 +27,11 @@ int main() {
         //printing out the GPU info
         printf("Device %d --> Max Threads per SM: %d, Warp Size: %d\n", i, dp.maxThreadsPerMultiProcessor, dp.warpSize);
 
-        printf("Clock Rate is: %f\n", dp.clockRate);
+        //printing out the clock info
+        printf("Clock Rate is: %f kHz\n", dp.clockRate);
+
+        //printing out the number of SM's
+        printf("Number of Streaming Multiprocessors is: %d", dp.multiProcessorCount);
 
         //printing the GPU Model Name
         printf("GPU Name: %s\n", dp.name);
