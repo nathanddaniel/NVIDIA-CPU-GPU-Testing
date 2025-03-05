@@ -37,11 +37,11 @@ int main() {
         //should I do CUDA Core per SM count for my GPU model?
 
         //printing the amount of Global Memory
-        printf("Amount of Global Memory is: %d bytes \n", dp.totalGlobalMem);
+        printf("Amount of Global Memory is: %llu bytes \n", dp.totalGlobalMem);
 
         
         //printing the amount of Constant Memory
-        printf("Amount of Constant Memory is: %d bytes \n", dp.totalConstMem);
+        printf("Amount of Constant Memory is: %llu bytes \n", dp.totalConstMem);
 
         //printing the GPU Model Name
         printf("GPU Name: %s\n", dp.name);
@@ -54,6 +54,12 @@ int main() {
 
         //printing the maximum number of threads per block
         printf("Max number of threads per block: %d \n", dp.maxThreadsPerBlock);
+
+        // Printing the maximum size of each dimension of a block (x, y, z)
+        printf("Max size of each dimension of a block: x = %d, y = %d, z = %d\n", dp.maxThreadsDim[0], dp.maxThreadsDim[1], dp.maxThreadsDim[2]);
+
+        // Printing the maximum size of each dimension of a grid (x, y, z)
+        printf("Max size of each dimension of a grid: x = %d, y = %d, z = %d\n", dp.maxGridSize[0], dp.maxGridSize[1], dp.maxGridSize[2]);
     }
 
     return 0;
