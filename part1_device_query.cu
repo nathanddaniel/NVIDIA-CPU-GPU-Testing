@@ -28,10 +28,20 @@ int main() {
         printf("Device %d --> Max Threads per SM: %d, Warp Size: %d\n", i, dp.maxThreadsPerMultiProcessor, dp.warpSize);
 
         //printing out the clock info
-        printf("Clock Rate is: %f kHz\n", dp.clockRate);
+        printf("Clock Rate is: %d kHz\n", dp.clockRate);
 
         //printing out the number of SM's
-        printf("Number of Streaming Multiprocessors is: %d", dp.multiProcessorCount);
+        printf("Number of Streaming Multiprocessors is: %d\n", dp.multiProcessorCount);
+
+        //printing out the number of cores
+        //should I do CUDA Core per SM count for my GPU model?
+
+        //printing the amount of Global Memory
+        printf("Amount of Global Memory is: %d \n", dp.totalGlobalMem);
+
+        
+        //printing the amount of Constant Memory
+        printf("Amount of Global Memory is: %d \n", dp.totalConstMem);
 
         //printing the GPU Model Name
         printf("GPU Name: %s\n", dp.name);
