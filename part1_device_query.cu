@@ -37,14 +37,23 @@ int main() {
         //should I do CUDA Core per SM count for my GPU model?
 
         //printing the amount of Global Memory
-        printf("Amount of Global Memory is: %d \n", dp.totalGlobalMem);
+        printf("Amount of Global Memory is: %d bytes \n", dp.totalGlobalMem);
 
         
         //printing the amount of Constant Memory
-        printf("Amount of Global Memory is: %d \n", dp.totalConstMem);
+        printf("Amount of Constant Memory is: %d bytes \n", dp.totalConstMem);
 
         //printing the GPU Model Name
         printf("GPU Name: %s\n", dp.name);
+
+        //printing the shared memory for each block
+        printf("Shared Memory Per Block: %d \n", dp.sharedMemPerBlock);
+
+        //printing the number of registers per block
+        printf("Number of registers/block: %d \n", dp.regsPerBlock);
+
+        //printing the maximum number of threads per block
+        printf("Max number of threads per block: %d \n", dp.maxThreadsPerBlock);
     }
 
     return 0;
