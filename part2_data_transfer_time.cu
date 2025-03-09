@@ -36,7 +36,7 @@ float CPUtoGPUTime(float* d_ptr, float* h_ptr, int size) {
     cudaEventRecord(start);
     cudaMemcpy(d_ptr, h_ptr, size, cudaMemcpyHostToDevice);
     cudaEventRecord(stop);
-    cudaEeventSynchronize(stop);
+    cudaEventSynchronize(stop);
     
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
@@ -61,7 +61,7 @@ float GPUtoCPUTime(float* h_ptr, float* d_ptr, int size) {
     cudaEventRecord(start);
     cudaMemcpy(d_ptr, h_ptr, size, cudaMemcpyDeviceToHost);
     cudaEventRecord(stop);
-    cudaEeventSynchronize(stop);
+    cudaEventSynchronize(stop);
     
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
@@ -79,7 +79,7 @@ int main() {
     //finding number of items in the array
     int numOfSizes = sizeof(matrixSizes) / sizeof(matrixSizes[0]);
 
-    int floatSize = sizeof(float)
+    int floatSize = sizeof(float);
 
     //iteraing through all the matrix sizes we have 
     for (int i = 0; i < numOfSizes; i++) {
@@ -97,7 +97,7 @@ int main() {
         float *h_N = (float*)malloc(bytes);
 
         //filling in the matrices with values (random ones tho)
-        for (int k = 0; k < currentSize * currentSize; currentSize++){
+        for (int k = 0; k < currentSize * currentSize; k++){
             //generating rando values between 0 and 5, small values to make it easeier to debug for now
             h_M[k] = (float)(rand() % 5);
             h_N[k] = (float)(rand() % 5);
@@ -118,8 +118,8 @@ int main() {
         float timeForCPUtoGPU = CPUtoGPUTime_MatrixM + CPUtoGPUTime_MatrixN;
 
         //measuring GPU to CPU copying time for each of the matrices M and N
-        float GPUtoCPUTime_MatrixM = GPUtoCPUTime(d_M, h_M, bytes);
-        float GPUtoCPUTime_MatrixN = GPUtoCPUTime(d_N, h_N, bytes);
+        float GPUtoCPUTime_MatrixM = GPUtoCPUTime(h_M, d_M, bytes);
+        float GPUtoCPUTime_MatrixN = GPUtoCPUTime(h_N, d_N, bytes);
         float timeForGPUtoCPU = GPUtoCPUTime_MatrixM + GPUtoCPUTime_MatrixN;
 
         // Print results
