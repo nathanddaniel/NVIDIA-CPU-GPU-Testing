@@ -68,28 +68,6 @@ float GPUtoCPUTime(float* h_ptr, float* d_ptr, int size) {
     return milliseconds;
 }
 
-// Function to measure GPU execution time
-float GPUExecutionTime(float* d_M, float* d_N, float* d_P, int Nsize) {
-    dim3 threadsPerBlock(1,1);
-    dim3 numBlocks(1,1);
-
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-
-    cudaEventRecord(start);
-    MatrixMulKernel<<<numBlocks, threadsPerBlock>>>(d_M, d_N, d_P, Nsize);
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-
-    float milliseconds = 0;
-    cudaEventElapsedTime(&milliseconds, start, stop);
-
-    cudaEventDestroy(start);
-    cudaEventDestroy(stop);
-    return milliseconds;
-}
-
 int main() {
     int matrixSizes[] = {256, 512, 1024, 2048, 4096};
     int numOfSizes = sizeof(matrixSizes) / sizeof(matrixSizes[0]);
@@ -131,8 +109,14 @@ int main() {
             float h2d_time_N = CPUtoGPUTime(d_N, h_N, bytes);
             float total_h2d_time = h2d_time_M + h2d_time_N;
 
-            // Measure GPU execution time
-            float gpu_exec_time = GPUExecutionTime(d_M, d_N, d_P, N);
+            // Measure GPU execution time (same approach as CPU)
+            cudaDeviceSynchronize();  // Ensure all previous CUDA calls are finished
+            clock_t start_gpu = clock();
+            MatrixMulKernel<<<numBlocks, threadsPerBlock>>>(d_M, d_N, d_P, N);
+            cudaDeviceSynchronize();  // Wait for GPU to finish
+            clock_t end_gpu = clock();
+
+            float gpu_exec_time = 1000.0 * (end_gpu - start_gpu) / CLOCKS_PER_SEC;
 
             // Measure Device → Host transfer time
             float d2h_time_P = GPUtoCPUTime(h_P_gpu, d_P, bytes);
