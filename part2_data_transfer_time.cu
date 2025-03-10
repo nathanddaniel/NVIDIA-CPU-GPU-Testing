@@ -63,6 +63,11 @@ int main() {
         cudaEventCreate(&start);
         cudaEventCreate(&stop);
 
+        float* h_P_cpu = (float*)malloc(bytes);
+        float* h_P_gpu = (float*)malloc(bytes);
+        float* d_P;
+        cudaMalloc(&d_P, bytes);
+
         // **Host to Device Transfer**
         float h2d_time;
         cudaEventRecord(start);
@@ -79,7 +84,8 @@ int main() {
         // **Device to Host Transfer**
         float d2h_time;
         cudaEventRecord(start);
-        cudaMemcpy(h_P_gpu, d_P, bytes, cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_M, d_M, bytes, cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_N, d_N, bytes, cudaMemcpyDeviceToHost);
         cudaEventRecord(stop);
         cudaEventSynchronize(stop);
         cudaEventElapsedTime(&d2h_time, start, stop);
@@ -88,11 +94,6 @@ int main() {
 
         // **Only Execute Matrix Multiplication for Certain Sizes**
         if (N <= 1024) {  // Perform computation only for 256x256, 512x512, 1024x1024
-            float* h_P_cpu = (float*)malloc(bytes);
-            float* h_P_gpu = (float*)malloc(bytes);
-            float* d_P;
-            cudaMalloc(&d_P, bytes);
-
             // **GPU Execution**
             float gpu_exec_time;
             cudaEventRecord(start);
@@ -125,6 +126,9 @@ int main() {
         }
 
         // Free Memory
+        free(h_P_cpu);
+        free(h_P_gpu);
+        cudaFree(d_P);
         free(h_M);
         free(h_N);
         cudaFree(d_M);
