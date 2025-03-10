@@ -74,7 +74,17 @@ int main() {
 
         // **Print Data Transfer Time**
         printf("\nMatrix Size: %d x %d\n", N, N);
-        printf("Host → Device Transfer Time: %.3f ms\n", h2d_time);
+        printf("Host to Device Transfer Time: %.3f ms\n", h2d_time);
+
+        // **Device to Host Transfer**
+        float d2h_time;
+        cudaEventRecord(start);
+        cudaMemcpy(h_P_gpu, d_P, bytes, cudaMemcpyDeviceToHost);
+        cudaEventRecord(stop);
+        cudaEventSynchronize(stop);
+        cudaEventElapsedTime(&d2h_time, start, stop);
+
+        printf("Device to Host Transfer Time: %.3f ms\n", d2h_time);
 
         // **Only Execute Matrix Multiplication for Certain Sizes**
         if (N <= 1024) {  // Perform computation only for 256x256, 512x512, 1024x1024
@@ -91,14 +101,6 @@ int main() {
             cudaEventSynchronize(stop);
             cudaEventElapsedTime(&gpu_exec_time, start, stop);
 
-            // **Device to Host Transfer**
-            float d2h_time;
-            cudaEventRecord(start);
-            cudaMemcpy(h_P_gpu, d_P, bytes, cudaMemcpyDeviceToHost);
-            cudaEventRecord(stop);
-            cudaEventSynchronize(stop);
-            cudaEventElapsedTime(&d2h_time, start, stop);
-
             // **CPU Execution Time**
             float cpu_exec_time = 0.0;
             cudaEventRecord(start, 0);
@@ -110,7 +112,6 @@ int main() {
 
             // **Print Execution Times**
             printf("GPU Execution Time: %.3f ms\n", gpu_exec_time);
-            printf("Device → Host Transfer Time: %.3f ms\n", d2h_time);
             printf("CPU Execution Time: %.3f ms\n", cpu_exec_time);
 
             // Free extra memory only when multiplication was performed
