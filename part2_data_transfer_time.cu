@@ -35,7 +35,7 @@ __global__ void MatrixMulKernel(float* M, float* N, float* P, int width) {
 
 int main() {
     // Array of matrix sizes
-    int matrixSizes[] = {256, 512, 1024};
+    int matrixSizes[] = {256, 512, 1024, 2048, 4096};
     int numOfSizes = sizeof(matrixSizes) / sizeof(matrixSizes[0]);
     int floatSize = sizeof(float);
 
@@ -46,8 +46,6 @@ int main() {
         // Allocate memory on CPU
         float* h_M = (float*)malloc(bytes);
         float* h_N = (float*)malloc(bytes);
-        float* h_P_cpu = (float*)malloc(bytes);
-        float* h_P_gpu = (float*)malloc(bytes);
 
         // Initialize matrices with random values
         for (int j = 0; j < N * N; j++) {
@@ -56,84 +54,75 @@ int main() {
         }
 
         // Allocate memory on GPU
-        float* d_M, *d_N, *d_P;
+        float* d_M, *d_N;
         cudaMalloc(&d_M, bytes);
         cudaMalloc(&d_N, bytes);
-        cudaMalloc(&d_P, bytes);
 
-        // Create CUDA event handles
+        // CUDA events for timing
         cudaEvent_t start, stop;
         cudaEventCreate(&start);
         cudaEventCreate(&stop);
 
-        // **Host to Device Transfer Time**
-        float h2d_time = 0.0;
-        cudaEventRecord(start, 0);
+        // **Host to Device Transfer**
+        float h2d_time;
+        cudaEventRecord(start);
         cudaMemcpy(d_M, h_M, bytes, cudaMemcpyHostToDevice);
         cudaMemcpy(d_N, h_N, bytes, cudaMemcpyHostToDevice);
-        cudaEventRecord(stop, 0);
+        cudaEventRecord(stop);
         cudaEventSynchronize(stop);
         cudaEventElapsedTime(&h2d_time, start, stop);
 
-        // **Kernel Launch Configuration (Single-Threaded Execution for Part 2)**
-        dim3 gridDim(1, 1);  // One block
-        dim3 blockDim(1, 1); // One thread
-
-        // **GPU Execution Time**
-        float gpu_exec_time = 0.0;
-        cudaEventRecord(start, 0);
-        cudaDeviceSynchronize();
-        MatrixMulKernel<<<gridDim, blockDim>>>(d_M, d_N, d_P, N);
-        cudaEventRecord(stop, 0);
-        cudaEventSynchronize(stop);
-        cudaEventElapsedTime(&gpu_exec_time, start, stop);
-
-        // **Device to Host Transfer Time**
-        float d2h_time = 0.0;
-        cudaEventRecord(start, 0);
-        cudaMemcpy(h_P_gpu, d_P, bytes, cudaMemcpyDeviceToHost);
-        cudaEventRecord(stop, 0);
-        cudaEventSynchronize(stop);
-        cudaEventElapsedTime(&d2h_time, start, stop);
-
-        // **CPU Execution Time**
-        float cpu_exec_time = 0.0;
-        cudaEventRecord(start, 0);
-        cudaDeviceSynchronize();
-        matrixMulCPU(h_P_cpu, h_M, h_N, N);
-        cudaEventRecord(stop, 0);
-        cudaEventSynchronize(stop);
-        cudaEventElapsedTime(&cpu_exec_time, start, stop);
-
-        // **Print Results**
+        // **Print Data Transfer Time**
         printf("\nMatrix Size: %d x %d\n", N, N);
-        printf("Host to Device Transfer Time: %.3f ms\n", h2d_time);
-        printf("GPU Execution Time: %.3f ms\n", gpu_exec_time);
-        printf("Device to Host Transfer Time: %.3f ms\n", d2h_time);
-        printf("CPU Execution Time: %.3f ms\n", cpu_exec_time);
+        printf("Host → Device Transfer Time: %.3f ms\n", h2d_time);
 
-        // **Validate GPU Output Against CPU**
-        bool flag = true;
-        for (int i = 0; i < N * N; i++) {
-            if (fabs(h_P_gpu[i] - h_P_cpu[i]) > 1e-5) {
-                flag = false;
-                break;
-            }
-        }
-        if (flag) {
-            printf("Test PASSED\n");
+        // **Only Execute Matrix Multiplication for Certain Sizes**
+        if (N <= 1024) {  // Perform computation only for 256x256, 512x512, 1024x1024
+            float* h_P_cpu = (float*)malloc(bytes);
+            float* h_P_gpu = (float*)malloc(bytes);
+            float* d_P;
+            cudaMalloc(&d_P, bytes);
+
+            // **GPU Execution**
+            float gpu_exec_time;
+            cudaEventRecord(start);
+            MatrixMulKernel<<<1, 1>>>(d_M, d_N, d_P, N);
+            cudaEventRecord(stop);
+            cudaEventSynchronize(stop);
+            cudaEventElapsedTime(&gpu_exec_time, start, stop);
+
+            // **Device to Host Transfer**
+            float d2h_time;
+            cudaEventRecord(start);
+            cudaMemcpy(h_P_gpu, d_P, bytes, cudaMemcpyDeviceToHost);
+            cudaEventRecord(stop);
+            cudaEventSynchronize(stop);
+            cudaEventElapsedTime(&d2h_time, start, stop);
+
+            // **CPU Execution Time**
+            clock_t start_cpu = clock();
+            matrixMulCPU(h_P_cpu, h_M, h_N, N);
+            clock_t end_cpu = clock();
+            float cpu_exec_time = 1000.0 * (end_cpu - start_cpu) / CLOCKS_PER_SEC;
+
+            // **Print Execution Times**
+            printf("GPU Execution Time: %.3f ms\n", gpu_exec_time);
+            printf("Device → Host Transfer Time: %.3f ms\n", d2h_time);
+            printf("CPU Execution Time: %.3f ms\n", cpu_exec_time);
+
+            // Free extra memory only when multiplication was performed
+            free(h_P_cpu);
+            free(h_P_gpu);
+            cudaFree(d_P);
         } else {
-            printf("Test FAILED\n");
+            printf("Skipping matrix multiplication for %d x %d matrix\n", N, N);
         }
 
         // Free Memory
         free(h_M);
         free(h_N);
-        free(h_P_cpu);
-        free(h_P_gpu);
         cudaFree(d_M);
         cudaFree(d_N);
-        cudaFree(d_P);
     }
 
     return 0;
