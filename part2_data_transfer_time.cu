@@ -109,15 +109,25 @@ int main() {
             float h2d_time_N = CPUtoGPUTime(d_N, h_N, bytes);
             float total_h2d_time = h2d_time_M + h2d_time_N;
 
+            dim3 threadsPerBlock(1,1);
+            dim3 numBlocks(1,1);
+
             // Measure GPU execution time (same approach as CPU)
-            cudaDeviceSynchronize();  // Ensure all previous CUDA calls are finished
-            clock_t start_gpu = clock();
-            MatrixMulKernel<<<numBlocks, threadsPerBlock>>>(d_M, d_N, d_P, N);
-            cudaDeviceSynchronize();  // Wait for GPU to finish
-            clock_t end_gpu = clock();
+            cudaEvent_t start, stop;
+            cudaEventCreate(&start);
+            cudaEventCreate(&stop);
 
-            float gpu_exec_time = 1000.0 * (end_gpu - start_gpu) / CLOCKS_PER_SEC;
+            cudaEventRecord(start);
+            MatrixMulKernel<<<numBlocks, threadsPerBlocks>>>(d_M, d_N, d_P, N);
+            cudaEventRecord(stop);
+            cudaEventSynchronize(stop);
 
+            float gpu_exec_time = 0;
+            cudaEventElapsedTime(&gpu_exec_time, start, stop);
+
+            cudaEventDestroy(start);
+            cudaEventDestroy(stop);
+    
             // Measure Device → Host transfer time
             float d2h_time_P = GPUtoCPUTime(h_P_gpu, d_P, bytes);
 
