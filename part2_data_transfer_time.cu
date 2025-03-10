@@ -5,45 +5,43 @@
 
 // Matrix Sizes
 #define BLOCK_WIDTH 32
-#define MAT_DIM_1 256
-#define MAT_DIM_2 512
-#define MAT_DIM_3 1024
 
-// GPU Kernel for Matrix Multiplication (Single-threaded)
-__global__ void MatrixMulKernel(float* M, float* N, float* P, int size) {
-    // Since this is a single-threaded GPU kernel, we manually iterate over the matrix
-    for (int row = 0; row < size; row++) {
-        for (int col = 0; col < size; col++) {
+// CPU Matrix Multiplication
+void matrixMulCPU(float* P, float* M, float* N, int width) {
+    for (int row = 0; row < width; row++) {
+        for (int col = 0; col < width; col++) {
             float sum = 0.0;
-            for (int i = 0; i < size; i++) {
-                sum += M[row * size + i] * N[i * size + col];
+            for (int i = 0; i < width; i++) {
+                sum += M[row * width + i] * N[i * width + col];
             }
-            P[row * size + col] = sum;
+            P[row * width + col] = sum;
         }
     }
 }
 
-// CPU Matrix Multiplication
-void matrixMulCPU(float* P, float* M, float* N, int size) {
-    for (int row = 0; row < size; row++) {
-        for (int col = 0; col < size; col++) {
+// GPU Kernel for Matrix Multiplication (Single-threaded)
+__global__ void MatrixMulKernel(float* M, float* N, float* P, int width) {
+    // Since this is a single-threaded GPU kernel, we manually iterate over the matrix
+    for (int row = 0; row < width; row++) {
+        for (int col = 0; col < width; col++) {
             float sum = 0.0;
-            for (int i = 0; i < size; i++) {
-                sum += M[row * size + i] * N[i * size + col];
+            for (int i = 0; i < width; i++) {
+                sum += M[row * width + i] * N[i * width + col];
             }
-            P[row * size + col] = sum;
+            P[row * width + col] = sum;
         }
     }
 }
 
 int main() {
     // Array of matrix sizes
-    int matrixSizes[] = {MAT_DIM_1, MAT_DIM_2, MAT_DIM_3};
+    int matrixSizes[] = {256, 512, 1024};
     int numOfSizes = sizeof(matrixSizes) / sizeof(matrixSizes[0]);
+    int floatSize = sizeof(float);
 
     for (int i = 0; i < numOfSizes; i++) {
         int N = matrixSizes[i];
-        int bytes = N * N * sizeof(float);
+        int bytes = N * N * floatSize;
 
         // Allocate memory on CPU
         float* h_M = (float*)malloc(bytes);
@@ -53,8 +51,8 @@ int main() {
 
         // Initialize matrices with random values
         for (int j = 0; j < N * N; j++) {
-            h_M[j] = static_cast<float>(rand()) / RAND_MAX;
-            h_N[j] = static_cast<float>(rand()) / RAND_MAX;
+            h_M[j] = (float)(rand() % 5);
+            h_N[j] = (float)(rand() % 5);
         }
 
         // Allocate memory on GPU
