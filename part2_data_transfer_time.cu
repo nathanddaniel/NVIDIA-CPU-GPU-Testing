@@ -100,10 +100,13 @@ int main() {
             cudaEventElapsedTime(&d2h_time, start, stop);
 
             // **CPU Execution Time**
-            clock_t start_cpu = clock();
+            float cpu_exec_time = 0.0;
+            cudaEventRecord(start, 0);
+            cudaDeviceSynchronize();
             matrixMulCPU(h_P_cpu, h_M, h_N, N);
-            clock_t end_cpu = clock();
-            float cpu_exec_time = 1000.0 * (end_cpu - start_cpu) / CLOCKS_PER_SEC;
+            cudaEventRecord(stop, 0);
+            cudaEventSynchronize(stop);
+            cudaEventElapsedTime(&cpu_exec_time, start, stop);
 
             // **Print Execution Times**
             printf("GPU Execution Time: %.3f ms\n", gpu_exec_time);
@@ -114,7 +117,9 @@ int main() {
             free(h_P_cpu);
             free(h_P_gpu);
             cudaFree(d_P);
-        } else {
+        } 
+        
+        else {
             printf("Skipping matrix multiplication for %d x %d matrix\n", N, N);
         }
 
