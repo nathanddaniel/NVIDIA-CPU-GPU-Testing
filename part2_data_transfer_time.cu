@@ -114,11 +114,6 @@ int main() {
             // **Print Execution Times**
             printf("GPU Execution Time: %.3f ms\n", gpu_exec_time);
             printf("CPU Execution Time: %.3f ms\n", cpu_exec_time);
-
-            // Free extra memory only when multiplication was performed
-            free(h_P_cpu);
-            free(h_P_gpu);
-            cudaFree(d_P);
         } 
         
         else {
