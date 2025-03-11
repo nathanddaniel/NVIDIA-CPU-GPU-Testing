@@ -36,10 +36,10 @@ __global__ void MatrixMulKernel(float* M, float* N, float* P, int width) {
 bool compareMatrices(float* A, float* B, int size, float tolerance) {
     for (int i = 0; i < size; i++) {
         if (fabs(A[i] - B[i]) > tolerance) {
-            return false;  // Matrices do not match
+            return false;
         }
     }
-    return true;  // Matrices match
+    return true;
 }
 
 int main() {
@@ -58,6 +58,7 @@ int main() {
         // Allocate memory on CPU
         float* h_M = (float*)malloc(bytes);
         float* h_N = (float*)malloc(bytes);
+        float* h_P_cpu = (float*)malloc(bytes);
         float* h_P_gpu = (float*)malloc(bytes);
         
         // Initialize matrices with random values
@@ -105,7 +106,25 @@ int main() {
             // **Print Execution Time**
             printf("Block Width: %d, GPU Execution Time: %.3f ms\n", block_width, gpu_exec_time);
 
-            // Destroy events
+            if (N <= 1024) {
+                float cpu_exec_time;
+                cudaEventRecord(start);
+                matrixMulCPU(h_P_cpu, h_M, h_N, N);
+                cudaEventRecord(stop);
+                cudaEventSynchronize(stop);
+                cudaEventElapsedTiem(&cpu_exec_time, start, stop);
+
+                printf("CPU Execution Time: %.3f ms\n", cpu_exec_time);
+
+                // **Compare CPU and GPU Results**
+                bool isCorrect = compareMatrices(h_P_cpu, h_P_gpu, N * N, 1e-5);
+                if (isCorrect) {
+                    printf("Test PASSED \n");
+                } else {
+                    printf("Test FAILED \n");
+                }
+            }
+             // Destroy events
             cudaEventDestroy(start);
             cudaEventDestroy(stop);
         }
