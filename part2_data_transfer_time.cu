@@ -132,6 +132,7 @@ int main() {
         // Free Memory
         free(h_M);
         free(h_N);
+        free(h_P_cpu);
         free(h_P_gpu);
         cudaFree(d_M);
         cudaFree(d_N);
