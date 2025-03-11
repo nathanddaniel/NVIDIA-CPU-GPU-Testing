@@ -78,8 +78,8 @@ int main() {
 
         printf("\nMatrix Size: %d x %d\n", N, N);
 
-        for (int b = 0; b < num_block_sizes; b++) {
-            int block_width = block_sizes[b];
+        for (int b = 0; b < numBlockSizes; b++) {
+            int block_width = blockSizes[b];
 
             // Define grid and block dimensions
             dim3 threadsPerBlock(block_width, block_width);
