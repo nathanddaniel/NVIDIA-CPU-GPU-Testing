@@ -112,7 +112,7 @@ int main() {
                 matrixMulCPU(h_P_cpu, h_M, h_N, N);
                 cudaEventRecord(stop);
                 cudaEventSynchronize(stop);
-                cudaEventElapsedTiem(&cpu_exec_time, start, stop);
+                cudaEventElapsedTime(&cpu_exec_time, start, stop);
 
                 printf("CPU Execution Time: %.3f ms\n", cpu_exec_time);
 
