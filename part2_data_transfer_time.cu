@@ -33,6 +33,15 @@ __global__ void MatrixMulKernel(float* M, float* N, float* P, int width) {
     }
 }
 
+bool compareMatrices(float* A, float* B, int size, float tolerance) {
+    for (int i = 0; i < size; i++) {
+        if (fabs(A[i] - B[i]) > tolerance) {
+            return false;  // Matrices do not match
+        }
+    }
+    return true;  // Matrices match
+}
+
 int main() {
     // Array of matrix sizes
     int matrixSizes[] = {256, 512, 1024, 2048, 4096};
@@ -102,6 +111,9 @@ int main() {
             cudaEventSynchronize(stop);
             cudaEventElapsedTime(&gpu_exec_time, start, stop);
 
+            // Copy result back from GPU to CPU
+            cudaMemcpy(h_P_gpu, d_P, bytes, cudaMemcpyDeviceToHost);
+
             // **CPU Execution Time**
             float cpu_exec_time = 0.0;
             cudaEventRecord(start, 0);
@@ -114,6 +126,15 @@ int main() {
             // **Print Execution Times**
             printf("GPU Execution Time: %.3f ms\n", gpu_exec_time);
             printf("CPU Execution Time: %.3f ms\n", cpu_exec_time);
+
+            // **Compare Results**
+            bool isCorrect = compareMatrices(h_P_cpu, h_P_gpu, N * N, 1e-5);
+
+            if (isCorrect) {
+                printf("Test PASSED \n");
+            } else {
+                printf("Test FAILED \n");
+            }
         } 
         
         else {
