@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <cmath>
 
-#define MAT_DIM 512  // Change this manually to 256, 512, 1024, etc.
-#define BLOCK_WIDTH 32
+#define MAT_DIM 256  // Change this manually to 256, 512, 1024, etc.
+#define BLOCK_WIDTH 1
 #define MAT_SIZE (MAT_DIM * MAT_DIM)
 
 // **Single-Threaded GPU Kernel**
@@ -69,9 +69,27 @@ int main() {
         hostN[i] = static_cast<float>(rand()) / RAND_MAX;
     }
 
-    // **Copy matrices to device**
+    // memcpy time transfer for input matrices - host to device 
+    float time1 = 0.0;
+    cudaEventRecord(start, 0);
+    cudaDeviceSynchronize();
     cudaMemcpy(deviceM, hostM, MAT_SIZE * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(deviceN, hostN, MAT_SIZE * sizeof(float), cudaMemcpyHostToDevice);
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&time1, start, stop);
+    printf("Data transfer time - Host to Device: %.3f ms\n", time1);
+
+    // memcpy time transfer for input matrices - device to host 
+    float time2 = 0.0;
+    cudaEventRecord(start, 0);
+    cudaDeviceSynchronize();
+    cudaMemcpy(hostM, deviceM, MAT_SIZE * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(hostN, deviceN, MAT_SIZE * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&time2, start, stop);
+    printf("Data transfer time - Device to Host: %.3f ms\n", time2);
 
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
