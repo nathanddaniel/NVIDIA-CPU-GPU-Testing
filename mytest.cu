@@ -90,19 +90,19 @@ int main() {
     cudaEventElapsedTime(&singleThreadTime, start, stop);
     printf("Single-Thread GPU Computation Time: %.3f ms\n", singleThreadTime);
 
-    // **Multi-Threaded GPU Execution**
-    dim3 gridDimMulti((MAT_DIM + BLOCK_WIDTH - 1) / BLOCK_WIDTH, 
-                      (MAT_DIM + BLOCK_WIDTH - 1) / BLOCK_WIDTH);
-    dim3 blockDimMulti(BLOCK_WIDTH, BLOCK_WIDTH);
+    // // **Multi-Threaded GPU Execution**
+    // dim3 gridDimMulti((MAT_DIM + BLOCK_WIDTH - 1) / BLOCK_WIDTH, 
+    //                   (MAT_DIM + BLOCK_WIDTH - 1) / BLOCK_WIDTH);
+    // dim3 blockDimMulti(BLOCK_WIDTH, BLOCK_WIDTH);
 
-    float multiThreadTime = 0.0;
-    cudaEventRecord(start, 0);
-    kernelMatMul_MultiThread<<<gridDimMulti, blockDimMulti>>>(deviceP, deviceM, deviceN, MAT_DIM);
-    cudaDeviceSynchronize();
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&multiThreadTime, start, stop);
-    printf("Multi-Threaded GPU Computation Time: %.3f ms\n", multiThreadTime);
+    // float multiThreadTime = 0.0;
+    // cudaEventRecord(start, 0);
+    // kernelMatMul_MultiThread<<<gridDimMulti, blockDimMulti>>>(deviceP, deviceM, deviceN, MAT_DIM);
+    // cudaDeviceSynchronize();
+    // cudaEventRecord(stop, 0);
+    // cudaEventSynchronize(stop);
+    // cudaEventElapsedTime(&multiThreadTime, start, stop);
+    // printf("Multi-Threaded GPU Computation Time: %.3f ms\n", multiThreadTime);
 
     // **CPU Computation**
     float cpuTime = 0.0;
@@ -115,6 +115,24 @@ int main() {
 
     // **Copy results from device to host**
     cudaMemcpy(kernelHostP, deviceP, MAT_SIZE * sizeof(float), cudaMemcpyDeviceToHost);
+
+    // **Compare CPU and GPU Results (Threshold = 1e-5)**
+    bool isCorrect = true;
+    const float epsilon = 1e-5;
+    for (int i = 0; i < MAT_SIZE; i++) {
+        if (fabs(kernelHostP[i] - cpuHostP[i]) > epsilon) {
+            printf("Mismatch at index %d: CPU = %.6f, GPU = %.6f\n", 
+                i, cpuHostP[i], kernelHostP[i]);
+            isCorrect = false;
+            break;  // Stop checking after the first error (optional)
+        }
+    }
+    // **Print Final Result**
+    if (isCorrect) {
+        printf("Test PASSED\n");
+    } else {
+        printf("Test FAILED\n");
+    }
 
     // **Free memory**
     free(hostM);
