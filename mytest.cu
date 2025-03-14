@@ -54,7 +54,7 @@ int main() {
     std::vector<int> sizes = {256, 512, 1024, 2048, 4096};
     std::vector<int> blockWidths = {2, 4, 8, 16, 32};
 
-    printf("\n========= Data Transfer Time (Host ↔ Device) =========\n");
+    printf("\n========= Data Transfer Time (Host to Device) =========\n");
     for (int size : sizes) {
         int matrixSize = size * size;
         float *hostM, *hostN, *deviceM, *deviceN;
@@ -128,6 +128,33 @@ int main() {
         cudaFree(deviceP);
         cudaEventDestroy(start);
         cudaEventDestroy(stop);
+
+        // **CPU Execution Timing**
+        float cpuTime;
+        cudaEventRecord(start, 0);
+        cpuMatMul(cpuHostP, hostM, hostN, size);
+        cudaEventRecord(stop, 0);
+        cudaEventSynchronize(stop);
+        cudaEventElapsedTime(&cpuTime, start, stop);
+
+        printf("Matrix Size: %d x %d | CPU Computation: %.3f ms\n", size, size, cpuTime);
+
+        // **Compare CPU and GPU Results**
+        bool isCorrect = true;
+        for (int i = 0; i < matrixSize; i++) {
+            if (fabs(kernelHostP[i] - cpuHostP[i]) > EPSILON) {
+                printf("Mismatch at index %d: CPU = %.6f, GPU = %.6f\n", i, cpuHostP[i], kernelHostP[i]);
+                isCorrect = false;
+                break;  // Stop checking after first mismatch (optional)
+            }
+        }
+
+        // **Print Final Verification Result**
+        if (isCorrect) {
+            printf("Test PASSED\n");
+        } else {
+            printf("Test FAILED\n");
+        }
     }
 
     printf("\n========= Multi-Threaded GPU Computation =========\n");
