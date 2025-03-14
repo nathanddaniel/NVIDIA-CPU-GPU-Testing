@@ -105,29 +105,53 @@ int main() {
         cudaEventDestroy(stop);
     }
 
-    printf("\n========= Single-Threaded GPU Computation =========\n");
+    printf("\n========= Single-Threaded GPU vs. CPU Computation =========\n");
     for (int size : {256, 512, 1024}) {
         int matrixSize = size * size;
-        float *deviceP;
+
+        // **Allocate Host Memory for Input & Output Matrices**
+        float *hostM, *hostN, *cpuHostP, *kernelHostP;
+        hostM = (float*)malloc(matrixSize * sizeof(float));
+        hostN = (float*)malloc(matrixSize * sizeof(float));
+        cpuHostP = (float*)malloc(matrixSize * sizeof(float));  // CPU output
+        kernelHostP = (float*)malloc(matrixSize * sizeof(float)); // GPU output
+
+        // **Allocate Device Memory**
+        float *deviceM, *deviceN, *deviceP;
+        cudaMalloc(&deviceM, matrixSize * sizeof(float));
+        cudaMalloc(&deviceN, matrixSize * sizeof(float));
         cudaMalloc(&deviceP, matrixSize * sizeof(float));
+
+        // **Initialize Input Matrices**
+        for (int i = 0; i < matrixSize; i++) {
+            hostM[i] = static_cast<float>(rand()) / RAND_MAX;
+            hostN[i] = static_cast<float>(rand()) / RAND_MAX;
+        }
+
+        // **Copy Matrices to Device**
+        cudaMemcpy(deviceM, hostM, matrixSize * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(deviceN, hostN, matrixSize * sizeof(float), cudaMemcpyHostToDevice);
 
         // **Single-Threaded GPU Execution**
         dim3 gridDim(1, 1);
         dim3 blockDim(1, 1);
+
         float gpuTime;
         cudaEvent_t start, stop;
         cudaEventCreate(&start);
         cudaEventCreate(&stop);
+        
         cudaEventRecord(start, 0);
-        kernelMatMul_SingleThread<<<gridDim, blockDim>>>(deviceP, deviceP, deviceP, size);
+        kernelMatMul_SingleThread<<<gridDim, blockDim>>>(deviceP, deviceM, deviceN, size);
         cudaDeviceSynchronize();
         cudaEventRecord(stop, 0);
         cudaEventSynchronize(stop);
         cudaEventElapsedTime(&gpuTime, start, stop);
+        
         printf("Matrix Size: %d x %d | Single-Threaded GPU: %.3f ms\n", size, size, gpuTime);
-        cudaFree(deviceP);
-        cudaEventDestroy(start);
-        cudaEventDestroy(stop);
+
+        // **Copy GPU Result to Host**
+        cudaMemcpy(kernelHostP, deviceP, matrixSize * sizeof(float), cudaMemcpyDeviceToHost);
 
         // **CPU Execution Timing**
         float cpuTime;
@@ -155,6 +179,17 @@ int main() {
         } else {
             printf("Test FAILED\n");
         }
+
+        // **Free Memory**
+        free(hostM);
+        free(hostN);
+        free(cpuHostP);
+        free(kernelHostP);
+        cudaFree(deviceM);
+        cudaFree(deviceN);
+        cudaFree(deviceP);
+        cudaEventDestroy(start);
+        cudaEventDestroy(stop);
     }
 
     printf("\n========= Multi-Threaded GPU Computation =========\n");
