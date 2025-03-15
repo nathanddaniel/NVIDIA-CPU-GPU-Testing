@@ -13,6 +13,7 @@
 
 //single thread, single block matrix multiplication GPU kernel
 __global__ void singleThreadMatrixMul(float* P, float* M, float* N, int size) {
+    //single thread if condition 
     if (threadIdx.x == 0 && threadIdx.y == 0 && blockIdx.x == 0 && blockIdx.y == 0) {
         for (int row = 0; row < size; row++) {
             for (int col = 0; col < size; col++) {
