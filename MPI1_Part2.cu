@@ -1,3 +1,5 @@
+/* Nathan Daniel : 20289363 */
+
 #include "cuda_runtime.h" //CUDA API functions
 #include <string.h> 
 #include <stdio.h> //used for printing stuff for like name of CUDA able GPUs
