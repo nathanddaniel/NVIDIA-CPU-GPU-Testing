@@ -111,11 +111,11 @@ int main() {
         int matrixSize = size * size;
 
         //allocating CPU Memory for matrices M and N
-        float *h_M, *h_N, *cpuHostP, *kernelHostP;
+        float *h_M, *h_N, *c_HP, *k_HP;
         h_M = (float*)malloc(matrixSize * sizeof(float));
         h_N = (float*)malloc(matrixSize * sizeof(float));
-        cpuHostP = (float*)malloc(matrixSize * sizeof(float));  
-        kernelHostP = (float*)malloc(matrixSize * sizeof(float));
+        c_HP = (float*)malloc(matrixSize * sizeof(float));  
+        k_HP = (float*)malloc(matrixSize * sizeof(float));
 
         //allocate GPU Memory
         float *deviceM, *deviceN, *deviceP;
@@ -156,12 +156,12 @@ int main() {
         printf("Matrix Size is: %d x %d --- Single-Threaded GPU Time is: %.3f ms\n", size, size, totalGPUTime);
 
         //copying the GPU Result to the CPU
-        cudaMemcpy(kernelHostP, deviceP, matrixSize * sizeof(float), cudaMemcpyDeviceToHost);
+        cudaMemcpy(k_HP, deviceP, matrixSize * sizeof(float), cudaMemcpyDeviceToHost);
 
         //host execution timing
         float totalCPUTime;
         cudaEventRecord(start, 0);
-        CPUMatMul(cpuHostP, h_M, h_N, size);
+        CPUMatMul(c_HP, h_M, h_N, size);
         cudaEventRecord(stop, 0);
         cudaEventSynchronize(stop);
         cudaEventElapsedTime(&totalCPUTime, start, stop);
@@ -171,8 +171,8 @@ int main() {
         //comparing the CPU and GPU Results
         bool passed = true;
         for (int i = 0; i < matrixSize; i++) {
-            if (fabs(kernelHostP[i] - cpuHostP[i]) > tolerance) {
-                printf("There's incorrect values at these indexes; %d: CPU = %.6f, GPU = %.6f\n", i, cpuHostP[i], kernelHostP[i]);
+            if (fabs(k_HP[i] - c_HP[i]) > tolerance) {
+                printf("There's incorrect values at these indexes; %d: CPU = %.6f, GPU = %.6f\n", i, c_HP[i], k_HP[i]);
                 passed = false;
                 break;  
             }
@@ -188,8 +188,8 @@ int main() {
         //freeing up memory
         free(h_M);
         free(h_N);
-        free(cpuHostP);
-        free(kernelHostP);
+        free(c_HP);
+        free(k_HP);
         cudaFree(deviceM);
         cudaFree(deviceN);
         cudaFree(deviceP);
