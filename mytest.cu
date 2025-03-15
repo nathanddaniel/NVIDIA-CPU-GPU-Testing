@@ -1,12 +1,9 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <cmath>
 #include <vector>
-
-//use this for now, debuggin values later
-#define MAX_BLOCK_WIDTH 32 
+#include <stdio.h>
+#include <cmath>
+#include <stdlib.h>
 
 //tolerance for CPU/GPU comparison
 #define tolerance 1e-5       
@@ -42,7 +39,7 @@ __global__ void multiThreadMatrixMul(float* P, float* M, float* N, int size) {
 }
 
 //CPU Matrix Multiplication function
-void cpuMatMul(float* P, float* M, float* N, int size) {
+void CPUMatMul(float* P, float* M, float* N, int size) {
     for (int row = 0; row < size; row++) {
         for (int col = 0; col < size; col++) {
             float sum = 0.0;
@@ -164,7 +161,7 @@ int main() {
         //host execution timing
         float totalCPUTime;
         cudaEventRecord(start, 0);
-        cpuMatMul(cpuHostP, h_M, h_N, size);
+        CPUMatMul(cpuHostP, h_M, h_N, size);
         cudaEventRecord(stop, 0);
         cudaEventSynchronize(stop);
         cudaEventElapsedTime(&totalCPUTime, start, stop);
